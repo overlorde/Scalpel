@@ -1,7 +1,7 @@
 import os
 import ast
 import sys
-from scalpel.scope_graph import ScopeGraph
+from scalpel.core._scope_graph import ScopeGraph
 src = """
 class A:
     static_a = 0

@@ -10,6 +10,8 @@ from collections import deque
 from copy import deepcopy
 from typing import Dict, List, Optional, Union
 
+from scalpel.util import is_num_node, is_str_node
+
 # typeshed can be imported here
 func_ret_types = {
     "dict": "dict",
@@ -231,11 +233,7 @@ def get_type(node, imports=None) -> str:
     elif isinstance(node, ast.BinOp):
         if isinstance(node.op, (ast.Div, ast.Mult)):
             return "float"
-        elif (
-            isinstance(node.op, ast.Mod)
-            and isinstance(node.left, ast.Constant)
-            and isinstance(node.left, ast.Str)
-        ):
+        elif isinstance(node.op, ast.Mod) and is_str_node(node.left):
             return "str"
         elif (
             isinstance(node.op, ast.Mod)
@@ -248,7 +246,6 @@ def get_type(node, imports=None) -> str:
                 node.left,
                 (
                     ast.Constant,
-                    ast.Num,
                     ast.List,
                     ast.ListComp,
                     ast.Set,
@@ -263,7 +260,6 @@ def get_type(node, imports=None) -> str:
                 node.right,
                 (
                     ast.Constant,
-                    ast.Num,
                     ast.List,
                     ast.ListComp,
                     ast.Set,
@@ -277,8 +273,8 @@ def get_type(node, imports=None) -> str:
     if isinstance(node, ast.Name) and node.id == "self":
         return "self"
 
-    if isinstance(node, ast.Num):
-        return type(node.n).__name__
+    if is_num_node(node):
+        return type(node.value).__name__
 
     elif isinstance(node, ast.List) or isinstance(node, ast.Tuple):
         value_type = check_consistent_list_types(node.elts)
@@ -293,14 +289,12 @@ def get_type(node, imports=None) -> str:
         return "set"
     elif isinstance(node, ast.SetComp):
         return "set"
-    elif isinstance(node, ast.Str):
+    elif is_str_node(node):
         return "str"
     elif isinstance(node, ast.JoinedStr):
         return "str"
     elif isinstance(node, ast.Constant):
         return type(node.value).__name__
-    elif isinstance(node, ast.NameConstant):
-        return any.__name__
     elif isinstance(node, ast.Lambda):
         return "lambda"
     elif isinstance(node, ast.DictComp):

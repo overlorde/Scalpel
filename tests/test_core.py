@@ -1,7 +1,6 @@
 import os
 import sys
 import ast
-import astor
 from scalpel.core.mnode import MNode
 from scalpel.core.func_call_visitor import get_func_calls
 from scalpel.core.vars_visitor import get_vars

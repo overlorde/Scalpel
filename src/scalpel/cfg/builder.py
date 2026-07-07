@@ -5,13 +5,10 @@ https://github.com/coetaur0/staticfg
 """
 
 import ast
-import sys
 
 from ..core.func_call_visitor import get_func_calls
+from ..util import is_str_node
 from .model import CFG, Block, Link
-
-is_py38_or_higher = lambda: sys.version_info.major == 3 and sys.version_info.minor >= 8
-NAMECONSTANT_TYPE = ast.Constant if is_py38_or_higher() else ast.NameConstant
 
 
 def invert(node):
@@ -43,8 +40,8 @@ def invert(node):
     elif isinstance(node, ast.BinOp) and type(node.op) in inverse:
         op = type(node.op)
         inverse_node = ast.BinOp(node.left, inverse[op](), node.right)
-    elif type(node) == NAMECONSTANT_TYPE and node.value in [True, False]:
-        inverse_node = NAMECONSTANT_TYPE(value=not node.value)
+    elif type(node) == ast.Constant and node.value in [True, False]:
+        inverse_node = ast.Constant(value=not node.value)
     else:
         inverse_node = ast.UnaryOp(op=ast.Not(), operand=node)
     return inverse_node
@@ -341,8 +338,8 @@ class CFGBuilder(ast.NodeVisitor):
                 func_name = visit_func(node.value)
                 func_name += "." + node.attr
                 return func_name
-            elif type(node) == ast.Str:
-                return node.s
+            elif is_str_node(node):
+                return node.value
             elif type(node) == ast.Subscript:
                 return node.value.id
 
@@ -461,10 +458,12 @@ class CFGBuilder(ast.NodeVisitor):
             if not self.current_block.exits:
                 self.add_exit(self.current_block, after_handlers_and_else)
 
-        self.current_block = finally_block
-        for child in node.finalbody:
-            self.visit(child)
-        self.add_exit(self.current_block, after_try_block)
+        # a finally block only exists when the try statement has a finalbody
+        if len(node.finalbody) > 0:
+            self.current_block = finally_block
+            for child in node.finalbody:
+                self.visit(child)
+            self.add_exit(self.current_block, after_try_block)
 
         # Continue building the CFG in the after-try block.
         self.current_block = final_block
@@ -527,7 +526,7 @@ class CFGBuilder(ast.NodeVisitor):
         inverted_test = invert(node.test)
         # Skip shortcut loop edge if while True:
         if not (
-            isinstance(inverted_test, NAMECONSTANT_TYPE)
+            isinstance(inverted_test, ast.Constant)
             and inverted_test.value is False
         ):
             self.add_exit(self.current_block, afterwhile_block, inverted_test)

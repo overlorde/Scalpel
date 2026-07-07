@@ -1,21 +1,57 @@
 [build-system]
-# Minimum requirements for the build system to execute.
-requires = [
-        "astor~=0.8.1",
-        "graphviz~=0.17",
-        "networkx",
-        "astunparse~=1.6.3",
-        "typed-ast",
-        "typeshed-client",
-        "regex",
-        "setuptools",
-        "dataclasses",
-        "pycg",
+# Runtime dependencies do not belong here; only what is needed to build the
+# package itself.
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "python-scalpel"
+version = "1.0b1"
+description = "Scalpel: The Python Static Analysis Framework"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
 ]
+dependencies = [
+    "graphviz>=0.17",
+    "networkx>=2.6",
+    "typeshed-client>=2.2.0",
+    "regex",
+    "packaging",
+    # 0.0.7 and 0.0.8 ship an import package whose casing does not match
+    # their own internal imports, which breaks on case-sensitive filesystems
+    "pycg==0.0.6",
+]
+
+[project.optional-dependencies]
+docs = [
+    "sphinx",
+    "myst_parser",
+    "sphinx_rtd_theme",
+    "sphinxcontrib-spelling",
+    "pydoctor",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/SMAT-Lab/Scalpel"
+"Bug Tracker" = "https://github.com/SMAT-Lab/Scalpel/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["scalpel*"]
 
 [tool.black]
 line-length = 88
-target_version = ['py38', 'py39', 'py310']
+target_version = ['py39', 'py310', 'py311', 'py312']
 preview = true
 exclude = '''
 /(
@@ -32,23 +68,6 @@ exclude = '''
   | asv_benchmarks/env
 )/
 '''
-
-[project]
-name = "Scalpel"
-version = "0.0.1"
-
-description = "Scalpel: The Python Static Analysis Framework"
-readme = "README.md"
-requires-python = ">=3.7"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: Apache Software License",
-    "Operating System :: OS Independent",
-]
-
-[project.urls]
-"Homepage" = "https://github.com/SMAT-Lab/Scalpel"
-"Bug Tracker" = "https://github.com/SMAT-Lab/Scalpel/issues"
 
 [tool.ruff]
 # Never enforce `E501` (line length violations).

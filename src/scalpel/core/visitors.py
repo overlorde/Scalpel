@@ -8,6 +8,8 @@ from collections import deque
 from copy import deepcopy
 import mypy
 
+from ..util import is_num_node, is_singleton_node, is_str_node
+
 class FuncCallVisitor(ast.NodeVisitor):
     """
     A NodeVisitor class for getting function call information
@@ -86,7 +88,7 @@ def get_args(node):
     for arg in node.args:
         if isinstance(arg, ast.Name):
             arg_type.append(arg.id)
-        elif isinstance(arg, ast.Num):
+        elif is_num_node(arg):
             arg_type.append("Num")
         elif isinstance(arg, ast.List):
             arg_type.append("List")
@@ -102,9 +104,9 @@ def get_args(node):
             arg_type.append("Set")
         elif isinstance(arg, ast.SetComp):
             arg_type.append("Set")
-        elif isinstance(arg, ast.Str):
+        elif is_str_node(arg):
             arg_type.append("Str")
-        elif isinstance(arg, ast.NameConstant):
+        elif is_singleton_node(arg):
             arg_type.append("NameConstant")
         elif isinstance(arg, ast.Constant):
             arg_type.append("Constant")

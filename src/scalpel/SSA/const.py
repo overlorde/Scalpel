@@ -6,7 +6,6 @@ import ast
 from collections import OrderedDict
 from functools import reduce
 
-import astor
 import networkx as nx
 
 from ..core.vars_visitor import get_vars
@@ -191,7 +190,7 @@ class SSA:
                     left_name = stmt.targets[0].id
                     const_dict[left_name] = stmt.value
                 elif isinstance(targets[0], ast.Attribute):
-                    left_name = astor.to_source(stmt.targets[0]).strip()
+                    left_name = ast.unparse(stmt.targets[0]).strip()
                     const_dict[left_name] = value
                 # multiple targets are represented as tuple
                 elif isinstance(targets[0], ast.Tuple):

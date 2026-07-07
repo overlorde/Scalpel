@@ -9,7 +9,6 @@ import tokenize
 from typing import Dict, List
 
 import typeshed_client
-from typed_ast import ast3
 
 from scalpel.cfg import CFGBuilder
 from scalpel.SSA.const import SSA
@@ -156,18 +155,18 @@ class ImportTypeMap(_StaticAnalyzer):
         if isinstance(fully_qualified_name, typeshed_client.parser.NameInfo):
             node = fully_qualified_name.ast
             if isinstance(node, ast.FunctionDef):
-                if isinstance(node.returns, ast3.Subscript):
+                if isinstance(node.returns, ast.Subscript):
                     return node.returns.value.id
 
                 if isinstance(node.returns, ast.Name):
                     return node.returns.id
-            elif isinstance(node, ast3.AnnAssign):
+            elif isinstance(node, ast.AnnAssign):
                 if hasattr(node.annotation, "id"):
                     return node.annotation.id
                 # bad catchall, will throw exception but we can improve on in future
                 else:
                     return node.annotation.value.id
-            elif isinstance(node, ast3.ClassDef):
+            elif isinstance(node, ast.ClassDef):
                 return node.name  # Type is class name
         return None
 

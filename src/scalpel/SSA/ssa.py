@@ -6,7 +6,6 @@ import ast
 from collections import OrderedDict
 from functools import reduce
 
-import astor
 import networkx as nx
 
 from ..cfg.builder import Block, CFGBuilder, invert
@@ -355,8 +354,8 @@ class SSA:
         for suc_link in block.predecessors:
             if condition_cons is not None and suc_link.exitcase is not None:
                 this_condition = invert(condition_cons)
-                this_txt = astor.to_source(this_condition)
-                this_edge_txt = astor.to_source(suc_link.exitcase)
+                this_txt = ast.unparse(this_condition)
+                this_edge_txt = ast.unparse(suc_link.exitcase)
                 # this path contracdict the constraints
                 if this_txt.strip() == this_edge_txt.strip():
                     continue

@@ -10,7 +10,6 @@ import sys
 import token
 import tokenize
 
-import astor
 import graphviz as gv
 
 __all__ = ["Block", "Link", "CFG"]
@@ -139,13 +138,15 @@ class Block(object):
             source = ''.join(map(lambda s : s.strip(), source))
             return source + "\n"
         for statement in self.statements:
-            source = astor.to_source(statement)
+            # ast.unparse does not emit a trailing newline like astor did,
+            # so one is appended wherever full statements are concatenated
+            source = ast.unparse(statement)
             if type(statement) in [ast.If, ast.For, ast.While, ast.With, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]:
                 src += get_source_helper(source)
             elif type(statement) == ast.Try:
-                src += (astor.to_source(statement)).split('\n')[0] + "\n"
+                src += source.split('\n')[0] + "\n"
             else:
-                src += astor.to_source(statement)
+                src += source + "\n"
         return src
 
     def get_calls(self):
@@ -200,7 +201,7 @@ class Link(object):
             A string containing the source code.
         """
         if self.exitcase:
-            return astor.to_source(self.exitcase)
+            return ast.unparse(self.exitcase)
         return ""
 
     def __del__(self):

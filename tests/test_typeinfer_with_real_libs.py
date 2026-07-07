@@ -30,10 +30,7 @@ def format_type_annot(annot):
         return [format_type_annot(elt) for elt in annot.elts]
     if isinstance(annot, ast.Name):
         return annot.id
-    if isinstance(annot, ast.Str):
-        return annot.s
-
-    elif isinstance(annot, ast.Constant):
+    if isinstance(annot, ast.Constant):
         if annot.value is None:
             return "empty"
         return annot.value
@@ -52,8 +49,6 @@ def format_type_annot(annot):
         return attr_name
     elif isinstance(annot, ast.Index):
         return format_type_annot(annot.value)
-    elif isinstance(annot, ast.NameConstant):
-        return annot.value
     else:
         # return ast.dump(annot)
         # print(ast.dump(annot), 'testing')

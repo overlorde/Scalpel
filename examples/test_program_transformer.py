@@ -2,7 +2,6 @@ import ast
 import os
 import sys
 
-import astor
 
 from scalpel.rewriter import Rewriter
 

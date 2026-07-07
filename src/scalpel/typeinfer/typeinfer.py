@@ -8,8 +8,6 @@ import os
 from pprint import pprint
 from typing import List
 
-import astunparse
-
 from scalpel.import_graph.import_graph import ImportGraph, Tree
 from scalpel.typeinfer.analysers import (
     ClassSplitVisitor,
@@ -377,7 +375,7 @@ class TypeInference:
         for function_node in all_methods:
             function_name = function_node.name
             processed_file.line_numbers[function_name] = function_node.lineno
-            function_source = astunparse.unparse(function_node)
+            function_source = ast.unparse(function_node)
 
             # Variable assignments
             assignments = VariableAssignmentMap(
@@ -486,7 +484,7 @@ class TypeInference:
             # Loop through class methods
             for function_node in class_visitor.fun_nodes:
                 function_name = f"{class_name}.{function_node.name}"
-                function_source = astunparse.unparse(function_node)
+                function_source = ast.unparse(function_node)
                 processed_file.line_numbers[function_name] = function_node.lineno
 
                 # Get method header comment TODO: Is this needed?

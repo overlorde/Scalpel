@@ -9,9 +9,6 @@ import os
 import random
 import sys
 
-import astor
-from astor.source_repr import count
-
 from scalpel.core.util import UnitWalker
 from scalpel.core.vars_visitor import get_vars
 
@@ -48,7 +45,7 @@ class Rewriter:
             unit.insert_stmts_before(new_stmts)
 
         new_ast = ast.fix_missing_locations(module_node)
-        new_src = astor.to_source(new_ast)
+        new_src = ast.unparse(new_ast)
         return new_src
 
     def random_var_renaming(self, new_name_candidates=[], K=2):
@@ -142,7 +139,7 @@ class Rewriter:
         self.ast = ast.fix_missing_locations(self.ast)
 
     def get_src(self):
-        return astor.to_source(self.ast)
+        return ast.unparse(self.ast)
 
 
 class VarRenamer(ast.NodeTransformer):

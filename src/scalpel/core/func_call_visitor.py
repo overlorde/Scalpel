@@ -1,18 +1,10 @@
 """ The module implements the Visitor class for different Function Calls within the Node. This also provides interfaces for Function Call Transformations."""
 import ast
-import sys
 from ast import NodeVisitor
 from collections import deque
 from copy import deepcopy
 
-
-def is_py38_or_higher():
-    if sys.version_info.major == 3 and sys.version_info.minor >= 8:
-        return True
-    return False
-
-
-NAMECONSTANT_TYPE = ast.Constant if is_py38_or_higher() else ast.NameConstant
+from ..util import is_num_node, is_singleton_node, is_str_node
 
 
 class CallTransformer(ast.NodeTransformer):
@@ -33,13 +25,7 @@ class CallTransformer(ast.NodeTransformer):
             elif type(node) == ast.BinOp:
                 # ingore such as  (a+b+c).fun()
                 return ""
-            elif type(node) == ast.Str:
-                # ingore such as  "xxx".fun()
-                return ""
             elif type(node) == ast.JoinedStr:
-                # ingore such as  "xxx".fun()
-                return ""
-            elif type(node) == ast.Bytes:
                 # ingore such as  "xxx".fun()
                 return ""
             elif type(node) == ast.Compare:
@@ -79,10 +65,6 @@ class CallTransformer(ast.NodeTransformer):
             return get_func(param)
         elif isinstance(param, ast.Name):
             return param.id
-        elif isinstance(param, ast.Num):
-            # python 3.6
-            return param.n
-            # return param.value
         elif isinstance(param, ast.List):
             return "List"
         elif isinstance(param, ast.ListComp):
@@ -93,10 +75,6 @@ class CallTransformer(ast.NodeTransformer):
             return "Dict"
         elif isinstance(param, (ast.Set, ast.SetComp)):
             return "Set"
-        elif isinstance(param, ast.Str):
-            return param.s
-        elif isinstance(param, ast.NameConstant):
-            return param.value
         elif isinstance(param, ast.Constant):
             return param.value
         elif isinstance(param, ast.Expr):
@@ -175,7 +153,7 @@ def get_args(node):
     for arg in node.args:
         if isinstance(arg, ast.Name):
             arg_type.append(arg.id)
-        elif isinstance(arg, ast.Num):
+        elif is_num_node(arg):
             arg_type.append("Num")
         elif isinstance(arg, ast.List):
             arg_type.append("List")
@@ -191,9 +169,9 @@ def get_args(node):
             arg_type.append("Set")
         elif isinstance(arg, ast.SetComp):
             arg_type.append("Set")
-        elif isinstance(arg, ast.Str):
+        elif is_str_node(arg):
             arg_type.append("Str")
-        elif isinstance(arg, ast.NameConstant):
+        elif is_singleton_node(arg):
             arg_type.append("NameConstant")
         elif isinstance(arg, ast.Constant):
             arg_type.append("Constant")

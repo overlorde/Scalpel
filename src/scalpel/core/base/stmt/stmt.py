@@ -47,14 +47,14 @@ stmt = FunctionDef(identifier name, arguments args,
 from enum import Enum
 from abc import ABC, abstractmethod
 import ast 
-import astor
+
 
 class SStmt:
   
     def __init__(self, node):
         assert isinstance(node, ast.stmt)
         self.node = node
-        self.src = astor.unparse(node)
+        self.src = ast.unparse(node)
         self.node_lineno =node.lineno
         self.node_col_offset = node.col_offset 
     

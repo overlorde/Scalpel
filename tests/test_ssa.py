@@ -2,7 +2,6 @@ import ast
 import os
 import sys
 
-import astor
 
 from scalpel.core.mnode import MNode
 from scalpel.SSA.const import SSA

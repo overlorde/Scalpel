@@ -23,6 +23,33 @@ def get_path_by_ext(root_dir, flag=".py"):
 def check_python_version():
     """check Python version"""
     # Check for known bad Python versions.
-    if sys.version_info[:2] < (3, 8):
+    if sys.version_info[:2] < (3, 9):
         sys.exit("Running Scalpel with Python 3.8 or lower is not supported; ")
+
+
+# Since Python 3.8 the parser folds every literal into ast.Constant. The old
+# specialised nodes (ast.Num, ast.Str, ast.Bytes, ast.NameConstant) only lived
+# on as deprecated aliases and were removed in Python 3.14, so the predicates
+# below replace isinstance checks against those classes. type() is compared
+# instead of isinstance so that booleans do not count as numbers, matching the
+# behaviour of the removed aliases.
+
+def is_num_node(node):
+    """Old ast.Num: an int, float or complex literal."""
+    return isinstance(node, ast.Constant) and type(node.value) in (int, float, complex)
+
+
+def is_str_node(node):
+    """Old ast.Str: a string literal."""
+    return isinstance(node, ast.Constant) and type(node.value) is str
+
+
+def is_bytes_node(node):
+    """Old ast.Bytes: a bytes literal."""
+    return isinstance(node, ast.Constant) and type(node.value) is bytes
+
+
+def is_singleton_node(node):
+    """Old ast.NameConstant: True, False or None."""
+    return isinstance(node, ast.Constant) and type(node.value) in (bool, type(None))
 

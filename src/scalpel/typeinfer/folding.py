@@ -9,8 +9,7 @@ import ast
 import math 
 import builtins
 
-from typing import Union
-from typing_extensions import Final
+from typing import Final, Union
 
 
 # All possible result types of constant folding
@@ -49,15 +48,7 @@ def ast_node_eval(node):
 
 def _eval(expr):
     if isinstance(expr, ast.Constant):
-        return expr.value 
-    elif isinstance(expr, ast.Num):
-        return expr.n 
-    elif isinstance(expr, ast.Str):
-        return expr.s 
-    elif isinstance(expr, ast.Bytes):
-        return expr.s 
-    elif isinstance(expr, ast.NameConstant):
-        return expr.value 
+        return expr.value
     elif isinstance(expr, ast.BinOp):
         op_func = BinOps[type(expr.op)]
         left_val = _eval(expr.left)

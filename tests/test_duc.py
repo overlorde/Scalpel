@@ -194,7 +194,7 @@ def test_definitions_and_references() -> None:
     test_multiple_defs()
 
 
-def test_relationships(src: str, *expected: Tuple[str, Optional[str], str]) -> None:
+def check_relationships(src: str, *expected: Tuple[str, Optional[str], str]) -> None:
     relationships = list(make_duc(src, src).container_relationships())
     assert len(relationships) == len(expected), (
         f"{src}: expected"
@@ -220,49 +220,49 @@ def test_relationships(src: str, *expected: Tuple[str, Optional[str], str]) -> N
 def test_container_relationships() -> None:
     def test_simple():
         for method in ("add", "append", "appendleft"):
-            test_relationships(f"a.{method}(b)", ("a", None, "b"))
+            check_relationships(f"a.{method}(b)", ("a", None, "b"))
 
-        test_relationships("a.insert(b, c)", ("a", None, "c"))
+        check_relationships("a.insert(b, c)", ("a", None, "c"))
 
-        test_relationships("a += [b, c, 1]", ("a", None, "b"), ("a", None, "c"))
-        test_relationships("a |= {b, c, 1}", ("a", None, "b"), ("a", None, "c"))
+        check_relationships("a += [b, c, 1]", ("a", None, "b"), ("a", None, "c"))
+        check_relationships("a |= {b, c, 1}", ("a", None, "b"), ("a", None, "c"))
 
-        test_relationships(
+        check_relationships(
             "a.update({b: c, d: e, 'f': g})",
             ("a", "b", "c"),
             ("a", "d", "e"),
             ("a", None, "g"),
         )
-        test_relationships(
+        check_relationships(
             "a.update(b=c, d=e, f=1)",
             ("a", None, "c"),
             ("a", None, "e"),
         )
-        test_relationships(
+        check_relationships(
             "a.update({b: c, d: e}, f=g)",
             ("a", "b", "c"),
             ("a", "d", "e"),
             ("a", None, "g"),
         )
-        test_relationships(
+        check_relationships(
             "a |= {b: c, d: e, 'f': g}",
             ("a", "b", "c"),
             ("a", "d", "e"),
             ("a", None, "g"),
         )
 
-        test_relationships("a = b + [c, d]", ("a", None, "c"), ("a", None, "d"))
-        test_relationships(
+        check_relationships("a = b + [c, d]", ("a", None, "c"), ("a", None, "d"))
+        check_relationships(
             "a = {b} | {c, d}",
             ("a", None, "b"),
             ("a", None, "c"),
             ("a", None, "d"),
         )
-        test_relationships(
+        check_relationships(
             "a = {b: c} | d",
             ("a", "b", "c"),
         )
-        test_relationships(
+        check_relationships(
             "a = b = c.d = [e, f] + [g]",
             ("a", None, "e"),
             ("a", None, "f"),
@@ -271,7 +271,7 @@ def test_container_relationships() -> None:
             ("b", None, "f"),
             ("b", None, "g"),
         )
-        test_relationships(
+        check_relationships(
             "a: T = {b} | c",
             ("a", None, "b"),
         )
