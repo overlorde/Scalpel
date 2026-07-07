@@ -108,6 +108,9 @@ class ImportTypeMap(_StaticAnalyzer):
         """
         super().__init__()
         self.imports: Dict[str, str] = {}
+        # Imported functions whose return type typeshed knows,
+        # mapped to (return type, line number of the import statement)
+        self.function_imports: Dict[str, tuple] = {}
         self.typeshed_resolver = typeshed_client.Resolver()
         self.root = root
 
@@ -133,9 +136,16 @@ class ImportTypeMap(_StaticAnalyzer):
                         import_name = ".".join(module + [name])
                         if module:
                             # Importing from module
-                            import_type = self.get_imported_type(import_name)
+                            import_type, is_function = self.get_imported_type(
+                                import_name
+                            )
                             if import_type is not None:
                                 import_mappings[name] = import_type
+                                if is_function:
+                                    self.function_imports[name] = (
+                                        import_type,
+                                        node.lineno,
+                                    )
                         else:
                             # Importing whole module
                             imports[import_name] = True
@@ -148,6 +158,8 @@ class ImportTypeMap(_StaticAnalyzer):
         Args:
             import_name: a fully qualified name of the function, the variable, etc.
 
+        Returns:
+            A (type, is_function) pair; the type is None when it is unknown.
         """
         fully_qualified_name = self.typeshed_resolver.get_fully_qualified_name(
             import_name
@@ -156,19 +168,19 @@ class ImportTypeMap(_StaticAnalyzer):
             node = fully_qualified_name.ast
             if isinstance(node, ast.FunctionDef):
                 if isinstance(node.returns, ast.Subscript):
-                    return node.returns.value.id
+                    return node.returns.value.id, True
 
                 if isinstance(node.returns, ast.Name):
-                    return node.returns.id
+                    return node.returns.id, True
             elif isinstance(node, ast.AnnAssign):
                 if hasattr(node.annotation, "id"):
-                    return node.annotation.id
+                    return node.annotation.id, False
                 # bad catchall, will throw exception but we can improve on in future
                 else:
-                    return node.annotation.value.id
+                    return node.annotation.value.id, False
             elif isinstance(node, ast.ClassDef):
-                return node.name  # Type is class name
-        return None
+                return node.name, False  # Type is class name
+        return None, False
 
 
 class ClassDefinitionMap(_StaticAnalyzer):

@@ -943,7 +943,9 @@ def actual_data_case_23():
                 "line_number": 1,
                 "parameter": "x",
                 "function": "my_function",
-                "type": {"any"},
+                # heuristic 7 narrows the parameter down from the
+                # isinstance() checks inside the function body
+                "type": {"int", "str"},
             },
         ],
         key=lambda x: str(x),

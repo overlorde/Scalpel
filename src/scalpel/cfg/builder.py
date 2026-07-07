@@ -398,80 +398,57 @@ class CFGBuilder(ast.NodeVisitor):
     def visit_Try(self, node):
         # Add the try statement at the end of the current block.
         self.add_statement(self.current_block, node)
+        entry_block = self.current_block
 
-        
-        # We have after_try block anyway
-        after_try_block = self.new_block()
-
-        # create a block for finally body, let the program flow continue regardless.
-        final_block = self.new_block()
-        self.add_exit(final_block, after_try_block)
-
-        # Create a new block for the body of try.
+        # The try body is entered when no exception is raised.
         try_block = self.new_block()
-        self.add_exit(self.current_block, try_block, ast.Constant(True))
+        self.add_exit(entry_block, try_block, ast.Constant(True))
 
-        #create a new block for else body of try
-        else_block = self.new_block()
-        # from try to else 
-        self.add_exit(try_block, else_block, ast.Constant(True))
-        # from orlse to finally 
-        self.add_exit(else_block, final_block)
-        
+        # One block per handler, guarded by the exception type it catches
+        # (None for a bare except clause).
+        handler_blocks = []
+        for handler in node.handlers:
+            h_block = self.new_block()
+            self.add_exit(entry_block, h_block, handler.type)
+            handler_blocks.append(h_block)
 
-        # create blocks for all handlers 
-        n_handlers = len(node.handlers)
-        handler_blocks = [self.new_block() for i in range(n_handlers)]
-        _ = [self.add_exit(self.current_block, h_block) for h_block in handler_blocks]
-        _ = [self.add_exit(h_block, final_block) for h_block in handler_blocks]
-        
-     
-        after_try_block = self.new_block()
-        after_handlers_and_else = after_try_block
-
-        if len(node.finalbody) > 0:
-            finally_block = self.new_block()
-            after_handlers_and_else = finally_block
-
-        # self.add_exit(self.current_block, after_try_block, ast.Constant(False))
-        # keep the original block
-     
+        # Build the try body.
         self.current_block = try_block
         for child in node.body:
             self.visit(child)
 
+        # The else body runs when the try body completes without raising.
+        if node.orelse:
+            else_block = self.new_block()
+            self.add_exit(self.current_block, else_block)
+            self.current_block = else_block
+            for child in node.orelse:
+                self.visit(child)
 
-        
-        else_block = self.new_block()
-        self.add_exit(self.current_block, else_block)
-        self.current_block = else_block
-        # create else block
-        for child in node.orelse:
-            self.visit(child)
-        self.add_exit(self.current_block, after_handlers_and_else)
+        # Every path joins in the finally block when there is a finalbody,
+        # otherwise directly in the after-try block.
+        finally_block = self.new_block() if node.finalbody else None
+        after_try_block = self.new_block()
+        join_block = finally_block if finally_block is not None else after_try_block
 
-        for i in range(n_handlers):
-            # recover current block 
-            self.current_block = handler_blocks[i]
-            self.visit(node.handlers[i])
-            # If encountered a break, exit will have already been added
+        # If encountered a return or break, exit will have already been added.
+        if not self.current_block.exits:
+            self.add_exit(self.current_block, join_block)
+
+        for handler, h_block in zip(node.handlers, handler_blocks):
+            self.current_block = h_block
+            self.visit(handler)
             if not self.current_block.exits:
-                self.add_exit(self.current_block, after_handlers_and_else)
+                self.add_exit(self.current_block, join_block)
 
-        # a finally block only exists when the try statement has a finalbody
-        if len(node.finalbody) > 0:
+        if finally_block is not None:
             self.current_block = finally_block
             for child in node.finalbody:
                 self.visit(child)
-            self.add_exit(self.current_block, after_try_block)
+            if not self.current_block.exits:
+                self.add_exit(self.current_block, after_try_block)
 
         # Continue building the CFG in the after-try block.
-        self.current_block = final_block
-        for child in node.finalbody:
-            self.visit(child)
-        if not self.current_block.exits:
-            self.add_exit(self.current_block, after_try_block)
-            
         self.current_block = after_try_block
 
    

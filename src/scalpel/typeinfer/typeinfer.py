@@ -128,8 +128,9 @@ class TypeInference:
                 if pair is None:
                     continue
                 function_name, t_val = pair
-                if t_val in ["call", "input"]:
-                    # TODO: Why do this?
+                # A hint of "any" carries no information and would only
+                # pollute type values that are already resolved.
+                if t_val in ["call", "input", "any"]:
                     continue
 
                 # Type hints are known
@@ -353,8 +354,16 @@ class TypeInference:
             return processed_file
 
         # Get imported types
-        import_mappings, imported = ImportTypeMap(tree).map()
+        import_map = ImportTypeMap(tree)
+        import_mappings, imported = import_map.map()
         processed_file.imports = import_mappings
+
+        # Imported functions with a return type known to typeshed are reported
+        # like local functions whose return type is already resolved,
+        # e.g. os.getcwd -> str
+        for name, (import_type, lineno) in import_map.function_imports.items():
+            processed_file.type_dict[name] = [import_type]
+            processed_file.line_numbers[name] = lineno
 
         split_visitor = SourceSplitVisitor()
         return_visitor = ReturnStmtVisitor(imports=import_mappings)
